@@ -1,0 +1,28 @@
+- name: Deploy Flask Application
+  hosts: remote_server
+  tasks:
+    - name: Update and install dependencies
+      apt:
+        update_cache: yes
+        name: 
+          - python3
+          - python3-pip
+        state: present
+
+    - name: Install application dependencies
+      pip:
+        requirements: /path/to/requirements.txt
+        virtualenv: /path/to/venv
+
+    - name: Copy application files
+      copy:
+        src: /local/path/to/application/
+        dest: /remote/path/to/application/
+        owner: <REMOTE_USER>
+        group: <REMOTE_USER>
+        mode: '0755'
+
+    - name: Start Flask application
+      shell: |
+        source /path/to/venv/bin/activate
+        nohup python /remote/path/to/application/app.py &
