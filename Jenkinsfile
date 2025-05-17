@@ -14,14 +14,14 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                bat "${env.PYTHON} -m pip install --upgrade pip"
-                bat "${env.PYTHON} -m pip install -r requirements.txt"
+                bat "\"${env.PYTHON}\" -m pip install --upgrade pip"
+                bat "\"${env.PYTHON}\" -m pip install -r requirements.txt"
             }
         }
 
         stage('Run Flask App') {
             steps {
-                bat "start /B ${env.PYTHON} app.py"
+                bat "start /B \"${env.PYTHON}\" app.py"
             }
         }
     }
