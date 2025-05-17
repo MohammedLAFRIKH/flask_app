@@ -9,15 +9,16 @@ pipeline {
         }
         stage('Install Dependencies') {
             steps {
-                bat 'python -m pip install --upgrade pip'
-                bat 'python -m pip install -r requirements.txt'
+                bat 'set PATH'
+                bat '"C:\\Users\\MOHAMMED LAFRIKH\\AppData\\Local\\Microsoft\\WindowsApps\\python3.11.exe" -m pip install --upgrade pip'
+                bat '"C:\\Users\\MOHAMMED LAFRIKH\\AppData\\Local\\Microsoft\\WindowsApps\\python3.11.exe" -m pip install -r requirements.txt'
             }
         }
         stage('Lint') {
             steps {
                 echo 'Linting the code...'
-                bat 'python -m pip install flake8 || exit 0'
-                bat 'flake8 . || echo Lint warnings, but continuing...'
+                bat '"C:\\Users\\MOHAMMED LAFRIKH\\AppData\\Local\\Microsoft\\WindowsApps\\python3.11.exe" -m pip install flake8 || exit 0'
+                bat '"C:\\Users\\MOHAMMED LAFRIKH\\AppData\\Local\\Microsoft\\WindowsApps\\python3.11.exe" -m flake8 . || echo Lint warnings, but continuing...'
             }
         }
         stage('Clean Workspace') {
@@ -29,13 +30,13 @@ pipeline {
         }
         stage('Run Tests') {
             steps {
-                bat 'pytest --junitxml=report.xml || echo Tests failed, but continuing...'
+                bat '"C:\\Users\\MOHAMMED LAFRIKH\\AppData\\Local\\Microsoft\\WindowsApps\\python3.11.exe" -m pytest --junitxml=report.xml || echo Tests failed, but continuing...'
             }
         }
         stage('Build') {
             steps {
                 echo 'Building the application...'
-                bat 'python -m compileall .'
+                bat '"C:\\Users\\MOHAMMED LAFRIKH\\AppData\\Local\\Microsoft\\WindowsApps\\python3.11.exe" -m compileall .'
             }
         }
         stage('Install & Run') {
@@ -46,7 +47,7 @@ pipeline {
         stage('Deploy to Local') {
             steps {
                 echo 'Deploying locally...'
-                bat 'start /B python app.py'
+                bat 'start /B "C:\\Users\\MOHAMMED LAFRIKH\\AppData\\Local\\Microsoft\\WindowsApps\\python3.11.exe" app.py'
             }
         }
         stage('Deploy to Remote') {
