@@ -3,35 +3,51 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/MohammedLAFRIKH/flask_app.git'
+                git 'https://github.com/aya-cyber/flask_app.git'
             }
         }
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
+                bat 'python -m pip install --upgrade pip'
+                bat 'python -m pip install -r requirements.txt'
+            }
+        }
+        stage('Lint') {
+            steps {
+                echo 'Linting the code...'
+                bat 'python -m pip install flake8 || exit 0'
+                bat 'flake8 . || echo Lint warnings, but continuing...'
+            }
+        }
+        stage('Clean Workspace') {
+            steps {
+                echo 'Cleaning up .pyc files and __pycache__ directories...'
+                bat 'del /S /Q *.pyc || exit 0'
+                bat 'rmdir /S /Q __pycache__ || exit 0'
             }
         }
         stage('Run Tests') {
             steps {
-                sh 'pytest || echo "Tests failed, but continuing..."'
+                bat 'pytest || echo Tests failed, but continuing...'
             }
         }
         stage('Build') {
             steps {
                 echo 'Building the application...'
-                sh 'python -m compileall .'
+                bat 'python -m compileall .'
             }
         }
         stage('Deploy to Local') {
             steps {
-                sh 'cd "c:\Users\MOHAMMED LAFRIKH\Desktop\flask_app"'
-                sh 'python app.py'
+                echo 'Deploying locally...'
+                bat 'start /B python app.py'
             }
         }
         stage('Deploy to Remote') {
             steps {
                 echo 'Deploying application to remote server using Ansible...'
-                sh 'ansible-playbook -i inventory.yml deploy.yml'
+            
+                bat 'ansible-playbook -i inventory.yml deploy.yml'
             }
         }
     }
