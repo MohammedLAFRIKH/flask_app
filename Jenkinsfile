@@ -3,8 +3,8 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            steps {
-                git 'https://github.com/aya-cyber/flask_app.git'
+steps {
+                git branch: 'main', url: 'https://github.com/aya-cyber/flask_app.git'
             }
         }
 
