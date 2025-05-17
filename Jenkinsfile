@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         PYTHON = 'C:/Users/MOHAMMED LAFRIKH/AppData/Local/Programs/Python/Python311/python.exe'
+        VENV = 'venv'
+        VENV_PYTHON = 'venv\\Scripts\\python.exe'
     }
 
     stages {
@@ -12,10 +14,30 @@ pipeline {
             }
         }
 
+        stage('Setup Virtualenv') {
+            steps {
+                bat "\"${env.PYTHON}\" -m venv ${env.VENV}"
+            }
+        }
+
+        stage('Install & Quality (Test)') {
+            steps {
+                bat "\"${env.VENV_PYTHON}\" -m pip install --upgrade pip"
+                bat "\"${env.VENV_PYTHON}\" -m pip install -r requirements.txt"
+                bat "\"${env.VENV_PYTHON}\" -m pip install flake8 bandit"
+                bat "\"${env.VENV_PYTHON}\" -m flake8 . --format=xml --output-file=flake8-report.xml"
+                bat "\"${env.VENV_PYTHON}\" -m bandit -r . -f xml -o bandit-report.xml"
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'flake8-report.xml,bandit-report.xml', allowEmptyArchive: true
+                }
+            }
+        }
 
         stage('Run Tests') {
             steps {
-                bat "\"${env.PYTHON}\" -m pytest --junitxml=reports/test-results.xml"
+                bat "\"${env.VENV_PYTHON}\" -m pytest --junitxml=reports/test-results.xml"
             }
             post {
                 always {
@@ -24,9 +46,30 @@ pipeline {
             }
         }
 
-        stage('Run Flask App') {
+        stage('Clean Workspace') {
             steps {
-                bat "start /B \"${env.PYTHON}\" app.py"
+                cleanWs()
+            }
+        }
+
+        stage('Dependency Security Audit') {
+            steps {
+                bat "\"${env.VENV_PYTHON}\" -m pip install pip-audit"
+                bat "\"${env.VENV_PYTHON}\" -m pip_audit"
+            }
+        }
+
+        stage('Run Flask App (Production)') {
+            when {
+                expression { currentBuild.currentResult == 'SUCCESS' }
+            }
+            steps {
+                bat 'start "FlaskApp" /B \"%CD%\\${env.VENV_PYTHON}\" app.py > flask_app.log 2>&1'
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'flask_app.log', allowEmptyArchive: true
+                }
             }
         }
     }
