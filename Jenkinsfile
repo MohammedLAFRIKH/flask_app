@@ -12,7 +12,6 @@ pipeline {
         stage('Checkout') {
             steps {
                 git 'https://github.com/aya-cyber/flask_app.git'
-             
             }
         }
         stage('Install Dependencies') {
