@@ -1,14 +1,7 @@
 pipeline {
     agent any
     stages {
-        stage('Check Python') {
-            steps {
-                echo 'Checking Python installation and PATH...'
-                bat 'where python'
-                bat 'python --version || echo Python not found!'
-                bat 'set PATH'
-            }
-        }
+
         stage('Checkout') {
             steps {
                 git 'https://github.com/aya-cyber/flask_app.git'
