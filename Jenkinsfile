@@ -1,46 +1,54 @@
 pipeline {
     agent any
+
+    environment {
+        PYTHON = 'C:/Users/MOHAMMED LAFRIKH/AppData/Local/Programs/Python/Python311/python.exe'
+    }
+
     stages {
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
-                git 'https://github.com/MohammedLAFRIKH/flask_app.git'
+                git branch: 'main', url: 'https://github.com/aya-cyber/flask_app.git'
             }
         }
-        stage('Install Dependencies') {
-            steps {
-                sh 'pip install -r requirements.txt'
-            }
-        }
+
+        
         stage('Run Tests') {
             steps {
-                sh 'pytest || echo "Tests failed, but continuing..."'
+                bat "\"${env.PYTHON}\" -m pytest --junitxml=reports/test-results.xml"
+            }
+            post {
+                always {
+                    junit 'reports/test-results.xml'
+                }
             }
         }
-        stage('Build') {
+
+        stage('Static & Security Analysis') {
             steps {
-                echo 'Building the application...'
-                sh 'python -m compileall .'
+                echo 'Analyse statique avec flake8...'
+                bat "\"${env.PYTHON}\" -m pip install flake8"
+                bat "\"${env.PYTHON}\" -m flake8 ."
+
+                echo 'Analyse sécurité avec bandit...'
+                bat "\"${env.PYTHON}\" -m pip install bandit"
+                bat "\"${env.PYTHON}\" -m bandit -r ."
             }
         }
-        stage('Deploy to Local') {
+
+        stage('Run Flask App') {
             steps {
-                sh 'cd "c:\Users\MOHAMMED LAFRIKH\Desktop\flask_app"'
-                sh 'python app.py'
-            }
-        }
-        stage('Deploy to Remote') {
-            steps {
-                echo 'Deploying application to remote server using Ansible...'
-                sh 'ansible-playbook -i inventory.yml deploy.yml'
+                bat "start /B \"${env.PYTHON}\" app.py"
             }
         }
     }
+
     post {
-        always {
-            echo 'Pipeline execution completed.'
+        success {
+            echo '✅ Déploiement local terminé avec succès.'
         }
         failure {
-            echo 'Pipeline failed. Check logs for details.'
+            echo '❌ Une erreur est survenue.'
         }
     }
 }

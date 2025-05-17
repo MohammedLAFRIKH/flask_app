@@ -1,25 +1,29 @@
-import requests
+import subprocess
 import time
-import logging
+import requests
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
+FLASK_URL = "http://127.0.0.1:5000/"
+CHECK_INTERVAL = 10  # secondes
 
-def monitor_app():
-    url = "http://127.0.0.1:5000/health"
-    retries = 3
-    while True:
-        for attempt in range(retries):
-            try:
-                response = requests.get(url)
-                if response.status_code == 200:
-                    logging.info("Application is running: %s", response.json())
-                    break
-                else:
-                    logging.warning("Application is not healthy! Status code: %d", response.status_code)
-            except Exception as e:
-                logging.error("Error connecting to the application: %s", e)
-            time.sleep(5)
-        time.sleep(10)
+def is_flask_running():
+    try:
+        response = requests.get(FLASK_URL, timeout=3)
+        return response.status_code == 200
+    except Exception:
+        return False
+
+def start_flask():
+    # Démarre l'application Flask en arrière-plan
+    return subprocess.Popen(["python", "app.py"])
 
 if __name__ == "__main__":
-    monitor_app()
+    flask_process = None
+    while True:
+        if not is_flask_running():
+            print("Flask n'est pas en cours d'exécution. Redémarrage...")
+            if flask_process:
+                flask_process.terminate()
+            flask_process = start_flask()
+        else:
+            print("Flask fonctionne correctement.")
+        time.sleep(CHECK_INTERVAL)
