@@ -1,9 +1,18 @@
 pipeline {
     agent any
     stages {
+        stage('Check Python') {
+            steps {
+                echo 'Checking Python installation and PATH...'
+                bat 'where python'
+                bat 'python --version || echo Python not found!'
+                bat 'set PATH'
+            }
+        }
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/aya-cyber/flask_app.git'
+                git 'https://github.com/aya-cyber/flask_app.git'
+                git pull origin main
             }
         }
         stage('Install Dependencies') {
@@ -28,13 +37,18 @@ pipeline {
         }
         stage('Run Tests') {
             steps {
-                bat 'pytest || echo Tests failed, but continuing...'
+                bat 'pytest --junitxml=report.xml || echo Tests failed, but continuing...'
             }
         }
         stage('Build') {
             steps {
                 echo 'Building the application...'
                 bat 'python -m compileall .'
+            }
+        }
+        stage('Install & Run') {
+            steps {
+                bat 'build.bat'
             }
         }
         stage('Deploy to Local') {
@@ -46,7 +60,7 @@ pipeline {
         stage('Deploy to Remote') {
             steps {
                 echo 'Deploying application to remote server using Ansible...'
-            
+                // تأكد أن Ansible مركب ومهيأ على الجهاز ويندوز أو نفذ هاد الخطوة من جهاز لينكس
                 bat 'ansible-playbook -i inventory.yml deploy.yml'
             }
         }
