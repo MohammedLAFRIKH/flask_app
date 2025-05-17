@@ -9,6 +9,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 git branch: 'main', url: 'https://github.com/aya-cyber/flask_app.git'
+<<<<<<< HEAD
             }
         }
 
@@ -38,6 +39,20 @@ pipeline {
 
         stage('Run Flask App') {
             steps {
+=======
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                bat "\"${env.PYTHON}\" -m pip install --upgrade pip"
+                bat "\"${env.PYTHON}\" -m pip install -r requirements.txt"
+            }
+        }
+
+        stage('Run Flask App') {
+            steps {
+>>>>>>> 1c4a14049d33759c849a32a0ddb3376feaec16c4
                 bat "start /B \"${env.PYTHON}\" app.py"
             }
         }
