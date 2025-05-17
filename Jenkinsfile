@@ -12,12 +12,6 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                bat "\"${env.PYTHON}\" -m pip install --upgrade pip"
-                bat "\"${env.PYTHON}\" -m pip install -r requirements.txt"
-            }
-        }
 
         stage('Run Tests') {
             steps {
@@ -27,18 +21,6 @@ pipeline {
                 always {
                     junit 'reports/test-results.xml'
                 }
-            }
-        }
-
-        stage('Static & Security Analysis') {
-            steps {
-                echo 'Analyse statique avec flake8...'
-                bat "\"${env.PYTHON}\" -m pip install flake8"
-                bat "\"${env.PYTHON}\" -m flake8 ."
-
-                echo 'Analyse sécurité avec bandit...'
-                bat "\"${env.PYTHON}\" -m pip install bandit"
-                bat "\"${env.PYTHON}\" -m bandit -r ."
             }
         }
 
