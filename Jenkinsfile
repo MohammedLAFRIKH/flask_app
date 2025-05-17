@@ -46,16 +46,16 @@ pipeline {
             }
         }
 
-        stage('Clean Workspace') {
-            steps {
-                cleanWs()
-            }
-        }
-
         stage('Dependency Security Audit') {
             steps {
                 bat "\"${env.VENV_PYTHON}\" -m pip install pip-audit"
                 bat "\"${env.VENV_PYTHON}\" -m pip_audit"
+            }
+        }
+
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
             }
         }
 
