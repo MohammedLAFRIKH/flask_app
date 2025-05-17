@@ -8,19 +8,27 @@ steps {
             }
         }
 
-        stage('Install Dependencies') {
+         stage('Install Dependencies') {
             steps {
-                echo 'Installing dependencies...'
-                bat 'py -3.11 -m pip install --upgrade pip'
-                bat 'py -3.11 -m pip install -r requirements.txt'
+                bat 'python -m pip install --upgrade pip'
+                bat 'python -m pip install -r requirements.txt'
             }
         }
 
-        stage('Deploy to Local') {
+        stage('Run Flask App') {
             steps {
-                echo 'Deploying locally...'
-                bat 'start /B py -3.11 app.py'
+                bat 'start /B python app.py'
             }
         }
     }
+
+    post {
+        success {
+            echo '✅ Déploiement local terminé avec succès.'
+        }
+        failure {
+            echo '❌ Une erreur est survenue.'
+        }
+    }
+
 }
