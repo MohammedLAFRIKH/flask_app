@@ -1,20 +1,26 @@
 pipeline {
     agent any
+
     stages {
-        stage('Deploy to Local') {
+        stage('Checkout') {
             steps {
-                echo 'Deploying locally...'
-                bat 'start /B "C:\\Users\\MOHAMMED LAFRIKH\\AppData\\Local\\Microsoft\\WindowsApps\\python3.11.exe" app.py'
+                git 'https://github.com/aya-cyber/flask_app.git'
             }
         }
 
-    }
-    post {
-        always {
-            echo 'Pipeline execution completed.'
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing dependencies...'
+                bat 'py -3.11 -m pip install --upgrade pip'
+                bat 'py -3.11 -m pip install -r requirements.txt'
+            }
         }
-        failure {
-            echo 'Pipeline failed. Check logs for details.'
+
+        stage('Deploy to Local') {
+            steps {
+                echo 'Deploying locally...'
+                bat 'start /B py -3.11 app.py'
+            }
         }
     }
 }
