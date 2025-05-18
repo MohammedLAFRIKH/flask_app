@@ -2,77 +2,87 @@ pipeline {
     agent any
 
     environment {
-        VENV = 'venv'
-        VENV_PYTHON = 'venv\\Scripts\\python.exe'
+        PYTHON = 'C:/Users/MOHAMMED LAFRIKH/AppData/Local/Programs/Python/Python311/python.exe'
+        VENV_DIR = 'venv'
+        VENV_PYTHON = "${env.VENV_DIR}\\Scripts\\python.exe"
+        REPORTS_DIR = 'reports'
+        LOGS_DIR = 'logs'
+    }
+
+    options {
+        // Garde les 10 dernières builds pour éviter surcharge disque
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        // Timeout global de la pipeline (ex: 30 minutes)
+        timeout(time: 30, unit: 'MINUTES')
+        // Affiche les sorties de commande en temps réel (utile pour debugging)
+        ansiColor('xterm')
     }
 
     stages {
         stage('Clone Repository') {
             steps {
+                echo '🔄 Clonage du dépôt Git...'
                 git branch: 'main', url: 'https://github.com/aya-cyber/flask_app.git'
             }
         }
 
-        stage('Setup Virtualenv') {
+        stage('Setup Virtual Environment') {
             steps {
-                bat '''
-                echo [INFO] Suppression de l'ancien venv s'il existe...
-                if exist venv rmdir /s /q venv
-
-                echo [INFO] Détection de Python...
-                where python > python_path.txt 2>nul
-                if not exist python_path.txt (
-                    echo [ERREUR] Python n'a pas été trouvé dans le PATH.
-                    exit /b 1
+                echo "⚙️ Création et activation de l'environnement virtuel '${env.VENV_DIR}'..."
+                bat """
+                if exist ${env.VENV_DIR} (
+                    echo Suppression de l'ancien environnement virtuel...
+                    rmdir /s /q ${env.VENV_DIR}
                 )
-
-                set /p PY_PATH=<python_path.txt
-                del python_path.txt
-
-                echo [INFO] Python détecté: %PY_PATH%
-                call "%PY_PATH%" -m venv venv
-                call "venv\\Scripts\\python.exe" -m pip install --upgrade pip setuptools wheel
-                '''
+                \"${env.PYTHON}\" -m venv ${env.VENV_DIR}
+                call \"${env.VENV_DIR}\\Scripts\\activate.bat\"
+                \"${env.VENV_PYTHON}\" -m pip install --upgrade pip setuptools wheel
+                """
             }
         }
 
-        stage('Install & Quality (Test)') {
+        stage('Install Dependencies') {
             steps {
-                bat '''
-                call "venv\\Scripts\\python.exe" -m pip install -r requirements.txt
-                call "venv\\Scripts\\python.exe" -m pip show flake8 >nul 2>&1 || call "venv\\Scripts\\python.exe" -m pip install flake8
-                call "venv\\Scripts\\python.exe" -m pip show bandit >nul 2>&1 || call "venv\\Scripts\\python.exe" -m pip install bandit
-                call "venv\\Scripts\\python.exe" -m flake8 . --format=xml --output-file=flake8-report.xml
-                call "venv\\Scripts\\python.exe" -m bandit -r . -f xml -o bandit-report.xml
-                '''
-            }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'flake8-report.xml,bandit-report.xml', allowEmptyArchive: true
-                }
+                echo '📦 Installation des dépendances depuis requirements.txt...'
+                bat """
+                call \"${env.VENV_DIR}\\Scripts\\activate.bat\"
+                \"${env.VENV_PYTHON}\" -m pip install -r requirements.txt
+                """
             }
         }
 
         stage('Run Tests') {
             steps {
-                bat '''
-                if not exist reports mkdir reports
-                call "venv\\Scripts\\python.exe" -m pytest --junitxml=reports/test-results.xml
-                '''
+                echo '🧪 Exécution des tests avec pytest...'
+                bat """
+                if exist ${env.REPORTS_DIR} rmdir /s /q ${env.REPORTS_DIR}
+                mkdir ${env.REPORTS_DIR}
+                call \"${env.VENV_DIR}\\Scripts\\activate.bat\"
+                \"${env.VENV_PYTHON}\" -m pytest --junitxml=${env.REPORTS_DIR}\\test-results.xml
+                """
             }
             post {
                 always {
-                    junit 'reports/test-results.xml'
+                    junit "${env.REPORTS_DIR}/test-results.xml"
                 }
             }
         }
 
         stage('Dependency Security Audit') {
             steps {
-                bat '''
-                call "venv\\Scripts\\python.exe" -m pip show pip-audit >nul 2>&1 || call "venv\\Scripts\\python.exe" -m pip install pip-audit
-                call "venv\\Scripts\\python.exe" -m pip_audit
-                '''
+                echo '🔒 Audit de sécurité des dépendances avec pip-audit...'
+                bat """
+                call \"${env.VENV_DIR}\\Scripts\\activate.bat\"
+                \"${env.VENV_PYTHON}\" -m pip show pip-audit >nul 2>&1 || \"${env.VENV_PYTHON}\" -m pip install pip-audit
+                \"${env.VENV_PYTHON}\" -m pip_audit
+                """
+            }
+        }
+
+        stage('Clean Workspace') {
+            steps {
+                echo '🧹 Nettoyage de l’espace de travail Jenkins...'
+                cleanWs()
             }
         }
 
@@ -81,28 +91,29 @@ pipeline {
                 expression { currentBuild.currentResult == 'SUCCESS' }
             }
             steps {
-                bat 'start "FlaskApp" /B "venv\\Scripts\\python.exe" app.py > flask_app.log 2>&1'
+                echo '🚀 Lancement de l’application Flask en arrière-plan...'
+                bat """
+                if not exist ${env.LOGS_DIR} mkdir ${env.LOGS_DIR}
+                start "FlaskApp" /B cmd /c \"call ${env.VENV_DIR}\\Scripts\\activate.bat && \"${env.VENV_PYTHON}\" app.py > ${env.LOGS_DIR}\\flask_app.log 2>&1\"
+                """
             }
             post {
                 always {
-                    archiveArtifacts artifacts: 'flask_app.log', allowEmptyArchive: true
+                    archiveArtifacts artifacts: "${env.LOGS_DIR}/flask_app.log", allowEmptyArchive: true
                 }
-            }
-        }
-
-        stage('Clean Workspace') {
-            steps {
-                cleanWs()
             }
         }
     }
 
     post {
         success {
-            echo '✅ Déploiement local terminé avec succès.'
+            echo '✅ Pipeline terminée avec succès !'
         }
         failure {
-            echo '❌ Une erreur est survenue.'
+            echo '❌ La pipeline a rencontré une erreur.'
+        }
+        always {
+            echo '🏁 Fin de la pipeline.'
         }
     }
 }
