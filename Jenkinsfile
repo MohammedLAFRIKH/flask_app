@@ -99,15 +99,7 @@ pipeline {
     post {
         success {
             echo '✅ Pipeline terminé avec succès.'
-            // Tag Git automatique (nécessite credentials configurés dans Jenkins)
-            script {
-                def tagName = "build-${env.BUILD_NUMBER}"
-                bat "git config --global user.email \"ayawahatezzaitoune2@gmail.com\""
-                bat "git config --global user.name \"aya-cyber\""
-                bat "git tag ${tagName}"
-                bat "git push origin ${tagName}"
-                echo "Tag ${tagName} créé et poussé."
-            }
+            // Suppression du tag Git automatique
         }
         failure {
             echo '❌ Une erreur est survenue.'
