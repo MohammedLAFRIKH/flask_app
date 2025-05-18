@@ -19,8 +19,7 @@ pipeline {
                 bat """
                 if exist ${env.VENV} rmdir /s /q ${env.VENV}
                 \"${env.PYTHON}\" -m venv ${env.VENV}
-                \"${env.VENV_PYTHON}\" -m pip install --upgrade setuptools wheel
-                \"${env.VENV_PYTHON}\" -m pip install --upgrade pip
+                \"${env.VENV_PYTHON}\" -m pip install --upgrade pip setuptools wheel
                 """
             }
         }
@@ -33,13 +32,13 @@ pipeline {
                 echo Running flake8...
                 \"${env.VENV_PYTHON}\" -m flake8 . --format=xml --output-file=flake8-report.xml
                 if %ERRORLEVEL% NEQ 0 (
-                    echo Erreurs de style détectées par flake8.
+                    echo [ERROR] Erreurs de style détectées par flake8.
                     exit /b %ERRORLEVEL%
                 )
                 echo Running bandit...
                 \"${env.VENV_PYTHON}\" -m bandit -r . -f xml -o bandit-report.xml
                 if %ERRORLEVEL% NEQ 0 (
-                    echo Problèmes de sécurité détectés par bandit.
+                    echo [ERROR] Problèmes de sécurité détectés par bandit.
                     exit /b %ERRORLEVEL%
                 )
                 """
