@@ -27,9 +27,6 @@ pipeline {
                 bat """
                 set "VENV_PYTHON=%WORKSPACE%\\%VENV_DIR%\\Scripts\\python.exe"
                 set "PATH=%WORKSPACE%\\%VENV_DIR%\\Scripts;%PATH%"
-                where python
-                echo %PATH%
-                rem Vérification du python du venv
                 "%VENV_PYTHON%" --version
                 "%VENV_PYTHON%" -m pip --version
                 call "%VENV_PYTHON%" -m pip install --upgrade pip
@@ -42,40 +39,39 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Tests & Reports') {
             steps {
                 bat """
                 if not exist reports mkdir reports
                 set "VENV_PYTHON=%WORKSPACE%\\%VENV_DIR%\\Scripts\\python.exe"
+
+                rem -- Tests unitaires
                 call "%VENV_PYTHON%" -m pytest --junitxml=reports/test-results.xml
 
-                rem === Idée : Générer un rapport de couverture de code ===
+                rem -- Couverture de code XML et HTML
                 call "%VENV_PYTHON%" -m pip show coverage >nul 2>&1 || call "%VENV_PYTHON%" -m pip install coverage
                 call "%VENV_PYTHON%" -m coverage run -m pytest
                 call "%VENV_PYTHON%" -m coverage xml -o reports/coverage.xml
-
-                rem === BONUS : Générer un rapport HTML de couverture ===
                 call "%VENV_PYTHON%" -m coverage html -d reports/htmlcov
-
-                rem === BONUS : Afficher la couverture dans la console ===
                 call "%VENV_PYTHON%" -m coverage report
 
-                rem === AFKAR : Générer un rapport requirements.txt figé (pour reproductibilité)
+                rem -- Geler les dépendances
                 call "%VENV_PYTHON%" -m pip freeze > reports/requirements-freeze.txt
 
-                rem === AFKAR : Vérifier la sécurité des dépendances (pip-audit)
+                rem -- Audit sécurité des dépendances
                 call "%VENV_PYTHON%" -m pip show pip-audit >nul 2>&1 || call "%VENV_PYTHON%" -m pip install pip-audit
                 call "%VENV_PYTHON%" -m pip_audit > reports/pip-audit.txt
 
-                rem === AFKAR : Générer un rapport de linting (flake8)
+                rem -- Linting flake8 (HTML + XML)
                 call "%VENV_PYTHON%" -m pip show flake8 >nul 2>&1 || call "%VENV_PYTHON%" -m pip install flake8
                 call "%VENV_PYTHON%" -m flake8 . --format=html --htmldir=reports/flake8-html || exit 0
+                call "%VENV_PYTHON%" -m flake8 . --format=xml --output-file=reports/flake8-report.xml || exit 0
                 """
             }
             post {
                 always {
                     junit 'reports/test-results.xml'
-                    archiveArtifacts artifacts: 'reports/coverage.xml,reports/htmlcov/**,reports/requirements-freeze.txt,reports/pip-audit.txt,reports/flake8-html/**', allowEmptyArchive: true
+                    archiveArtifacts artifacts: 'reports/coverage.xml,reports/htmlcov/**,reports/requirements-freeze.txt,reports/pip-audit.txt,reports/flake8-html/**,reports/flake8-report.xml', allowEmptyArchive: true
                 }
             }
         }
