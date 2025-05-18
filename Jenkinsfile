@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         VENV_DIR = "venv"
+        // Remplace ce chemin par le chemin exact vers python.exe sur ta machine Jenkins
+        PYTHON_PATH = "C:\\Users\\MOHAMMED LAFRIKH\\AppData\\Local\\Programs\\Python\\Python311\\python.exe"
         VENV_PYTHON = "${env.WORKSPACE}\\${env.VENV_DIR}\\Scripts\\python.exe"
     }
 
@@ -13,26 +15,23 @@ pipeline {
             }
         }
 
-        stage('Setup Virtualenv') {
+        stage('Setup Virtual Environment') {
             steps {
                 bat """
-                if exist ${VENV_DIR} rmdir /s /q ${VENV_DIR}
-                python -m venv ${VENV_DIR}
-                \"${VENV_PYTHON}\" -m pip install --upgrade pip setuptools wheel
+                if not exist ${VENV_DIR} (
+                    \"${PYTHON_PATH}\" -m venv ${VENV_DIR}
+                )
                 """
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                // Si tu as un fichier requirements.txt, utilise cette ligne : 
-                // sinon remplace par l'installation directe de pytest
-                
                 bat """
                 if exist requirements.txt (
                     \"${VENV_PYTHON}\" -m pip install -r requirements.txt
                 ) else (
-                    \"${VENV_PYTHON}\" -m pip install pytest
+                    \"${VENV_PYTHON}\" -m pip install flask pytest
                 )
                 """
             }
@@ -51,13 +50,14 @@ pipeline {
                 }
             }
         }
-
-        // Ajoute d’autres stages si besoin, par exemple déploiement, audit, etc.
     }
 
     post {
         failure {
             echo '❌ Une erreur est survenue.'
+        }
+        success {
+            echo '✅ Pipeline terminé avec succès.'
         }
     }
 }
