@@ -59,12 +59,23 @@ pipeline {
 
                 rem === BONUS : Afficher la couverture dans la console ===
                 call "%VENV_PYTHON%" -m coverage report
+
+                rem === AFKAR : Générer un rapport requirements.txt figé (pour reproductibilité)
+                call "%VENV_PYTHON%" -m pip freeze > reports/requirements-freeze.txt
+
+                rem === AFKAR : Vérifier la sécurité des dépendances (pip-audit)
+                call "%VENV_PYTHON%" -m pip show pip-audit >nul 2>&1 || call "%VENV_PYTHON%" -m pip install pip-audit
+                call "%VENV_PYTHON%" -m pip_audit > reports/pip-audit.txt
+
+                rem === AFKAR : Générer un rapport de linting (flake8)
+                call "%VENV_PYTHON%" -m pip show flake8 >nul 2>&1 || call "%VENV_PYTHON%" -m pip install flake8
+                call "%VENV_PYTHON%" -m flake8 . --format=html --htmldir=reports/flake8-html || exit 0
                 """
             }
             post {
                 always {
                     junit 'reports/test-results.xml'
-                    archiveArtifacts artifacts: 'reports/coverage.xml,reports/htmlcov/**', allowEmptyArchive: true
+                    archiveArtifacts artifacts: 'reports/coverage.xml,reports/htmlcov/**,reports/requirements-freeze.txt,reports/pip-audit.txt,reports/flake8-html/**', allowEmptyArchive: true
                 }
             }
         }
