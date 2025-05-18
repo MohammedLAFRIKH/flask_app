@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         VENV_DIR = "venv"
-        // Remplace ce chemin par le chemin exact vers python.exe sur ta machine Jenkins
         PYTHON_PATH = "C:\\Users\\MOHAMMED LAFRIKH\\AppData\\Local\\Programs\\Python\\Python311\\python.exe"
         VENV_PYTHON = "${env.WORKSPACE}\\${env.VENV_DIR}\\Scripts\\python.exe"
     }
@@ -28,10 +27,13 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 bat """
+                set "VENV_PYTHON=${env.WORKSPACE}\\${VENV_DIR}\\Scripts\\python.exe"
                 if exist requirements.txt (
-                    \"${VENV_PYTHON}\" -m pip install -r requirements.txt
+                    call "%VENV_PYTHON%" -m pip install --upgrade pip
+                    call "%VENV_PYTHON%" -m pip install -r requirements.txt
                 ) else (
-                    \"${VENV_PYTHON}\" -m pip install flask pytest
+                    call "%VENV_PYTHON%" -m pip install --upgrade pip
+                    call "%VENV_PYTHON%" -m pip install flask pytest
                 )
                 """
             }
@@ -41,7 +43,7 @@ pipeline {
             steps {
                 bat """
                 if not exist reports mkdir reports
-                \"${VENV_PYTHON}\" -m pytest --junitxml=reports/test-results.xml
+                call "${env.WORKSPACE}\\${VENV_DIR}\\Scripts\\python.exe" -m pytest --junitxml=reports/test-results.xml
                 """
             }
             post {
