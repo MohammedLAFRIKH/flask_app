@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        PYTHON = 'C:/Users/MOHAMMED LAFRIKH/AppData/Local/Programs/Python/Python311/python.exe'
         VENV = 'venv'
         VENV_PYTHON = 'venv\\Scripts\\python.exe'
     }
@@ -18,8 +17,11 @@ pipeline {
             steps {
                 bat """
                 if exist ${env.VENV} rmdir /s /q ${env.VENV}
-                \"${env.PYTHON}\" -m venv ${env.VENV}
-                \"${env.VENV_PYTHON}\" -m pip install --upgrade pip setuptools wheel
+                where python > tmp_path.txt
+                set /p PY_PATH=<tmp_path.txt
+                del tmp_path.txt
+                call \"%PY_PATH%\" -m venv ${env.VENV}
+                call \"${env.VENV_PYTHON}\" -m pip install --upgrade pip setuptools wheel
                 """
             }
         }
@@ -27,17 +29,17 @@ pipeline {
         stage('Install & Quality (Test)') {
             steps {
                 bat """
-                \"${env.VENV_PYTHON}\" -m pip install -r requirements.txt
-                \"${env.VENV_PYTHON}\" -m pip show flake8 >nul 2>&1 || \"${env.VENV_PYTHON}\" -m pip install flake8
-                \"${env.VENV_PYTHON}\" -m pip show bandit >nul 2>&1 || \"${env.VENV_PYTHON}\" -m pip install bandit
+                call \"${env.VENV_PYTHON}\" -m pip install -r requirements.txt
+                call \"${env.VENV_PYTHON}\" -m pip show flake8 >nul 2>&1 || call \"${env.VENV_PYTHON}\" -m pip install flake8
+                call \"${env.VENV_PYTHON}\" -m pip show bandit >nul 2>&1 || call \"${env.VENV_PYTHON}\" -m pip install bandit
                 echo Running flake8...
-                \"${env.VENV_PYTHON}\" -m flake8 . --format=xml --output-file=flake8-report.xml
+                call \"${env.VENV_PYTHON}\" -m flake8 . --format=xml --output-file=flake8-report.xml
                 if %ERRORLEVEL% NEQ 0 (
                     echo [ERROR] Erreurs de style détectées par flake8.
                     exit /b %ERRORLEVEL%
                 )
                 echo Running bandit...
-                \"${env.VENV_PYTHON}\" -m bandit -r . -f xml -o bandit-report.xml
+                call \"${env.VENV_PYTHON}\" -m bandit -r . -f xml -o bandit-report.xml
                 if %ERRORLEVEL% NEQ 0 (
                     echo [ERROR] Problèmes de sécurité détectés par bandit.
                     exit /b %ERRORLEVEL%
@@ -55,7 +57,7 @@ pipeline {
             steps {
                 bat """
                 if not exist reports mkdir reports
-                \"${env.VENV_PYTHON}\" -m pytest --junitxml=reports/test-results.xml
+                call \"${env.VENV_PYTHON}\" -m pytest --junitxml=reports/test-results.xml
                 """
             }
             post {
@@ -68,8 +70,8 @@ pipeline {
         stage('Dependency Security Audit') {
             steps {
                 bat """
-                \"${env.VENV_PYTHON}\" -m pip show pip-audit >nul 2>&1 || \"${env.VENV_PYTHON}\" -m pip install pip-audit
-                \"${env.VENV_PYTHON}\" -m pip_audit
+                call \"${env.VENV_PYTHON}\" -m pip show pip-audit >nul 2>&1 || call \"${env.VENV_PYTHON}\" -m pip install pip-audit
+                call \"${env.VENV_PYTHON}\" -m pip_audit
                 """
             }
         }
@@ -85,7 +87,7 @@ pipeline {
                 expression { currentBuild.currentResult == 'SUCCESS' }
             }
             steps {
-                bat 'start "FlaskApp" /B \"%CD%\\${env.VENV_PYTHON}\" app.py > flask_app.log 2>&1'
+                bat "start \"FlaskApp\" /B \"%CD%\\${env.VENV_PYTHON}\" app.py > flask_app.log 2>&1"
             }
             post {
                 always {
