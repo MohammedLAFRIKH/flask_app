@@ -53,12 +53,18 @@ pipeline {
                 call "%VENV_PYTHON%" -m pip show coverage >nul 2>&1 || call "%VENV_PYTHON%" -m pip install coverage
                 call "%VENV_PYTHON%" -m coverage run -m pytest
                 call "%VENV_PYTHON%" -m coverage xml -o reports/coverage.xml
+
+                rem === BONUS : Générer un rapport HTML de couverture ===
+                call "%VENV_PYTHON%" -m coverage html -d reports/htmlcov
+
+                rem === BONUS : Afficher la couverture dans la console ===
+                call "%VENV_PYTHON%" -m coverage report
                 """
             }
             post {
                 always {
                     junit 'reports/test-results.xml'
-                    archiveArtifacts artifacts: 'reports/coverage.xml', allowEmptyArchive: true
+                    archiveArtifacts artifacts: 'reports/coverage.xml,reports/htmlcov/**', allowEmptyArchive: true
                 }
             }
         }
