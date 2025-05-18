@@ -118,10 +118,11 @@ pipeline {
                 def tagName = "build-${env.BUILD_NUMBER}"
                 bat "git config --global user.email \"ayawahatezzaitoune2@gmail.com\""
                 bat "git config --global user.name \"aya-cyber\""
-                bat "git tag %s" % tagName
-                bat "git push origin %s" % tagName
-                
-                echo "Tag %s créé et poussé." % tagName
+                bat "git tag ${tagName}"
+                bat "git push origin ${tagName}"
+                echo "Tag ${tagName} créé et poussé."
+            }
+        }
         failure {
             echo '❌ Une erreur est survenue.'
         }
