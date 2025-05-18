@@ -28,14 +28,14 @@ pipeline {
                 bat """
                 set "VENV_PYTHON=%WORKSPACE%\\%VENV_DIR%\\Scripts\\python.exe"
                 set "PATH=%WORKSPACE%\\%VENV_DIR%\\Scripts;%PATH%"
-                where python
-                "%WORKSPACE%\\%VENV_DIR%\\Scripts\\python.exe" --version
-                "%WORKSPACE%\\%VENV_DIR%\\Scripts\\python.exe" -m pip --version
-                call "%WORKSPACE%\\%VENV_DIR%\\Scripts\\python.exe" -m pip install --upgrade pip
+                rem Vérification du python du venv
+                "%VENV_PYTHON%" --version
+                "%VENV_PYTHON%" -m pip --version
+                call "%VENV_PYTHON%" -m pip install --upgrade pip
                 if exist requirements.txt (
-                    call "%WORKSPACE%\\%VENV_DIR%\\Scripts\\python.exe" -m pip install -r requirements.txt
+                    call "%VENV_PYTHON%" -m pip install -r requirements.txt
                 ) else (
-                    call "%WORKSPACE%\\%VENV_DIR%\\Scripts\\python.exe" -m pip install flask pytest
+                    call "%VENV_PYTHON%" -m pip install flask pytest
                 )
                 """
             }
