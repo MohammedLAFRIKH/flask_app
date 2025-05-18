@@ -104,7 +104,7 @@ pipeline {
                         keepAll: true
                     ])
                     // Copier le badge de couverture dans le workspace pour versionning ou upload externe
-                    copyArtifacts(projectName: env.JOB_NAME, filter: 'reports/coverage-badge.svg', target: 'coverage-badge/')
+                    // copyArtifacts(projectName: env.JOB_NAME, filter: 'reports/coverage-badge.svg', target: 'coverage-badge/')
                 }
             }
         }
@@ -116,10 +116,12 @@ pipeline {
             // Tag Git automatique (nécessite credentials configurés dans Jenkins)
             script {
                 def tagName = "build-${env.BUILD_NUMBER}"
-                sh "git tag ${tagName}"
-                sh "git push origin ${tagName}"
-            }
-        }
+                bat "git config --global user.email \"ayawahatezzaitoune2@gmail.com\""
+                bat "git config --global user.name \"aya-cyber\""
+                bat "git tag %s" % tagName
+                bat "git push origin %s" % tagName
+                
+                echo "Tag %s créé et poussé." % tagName
         failure {
             echo '❌ Une erreur est survenue.'
         }
