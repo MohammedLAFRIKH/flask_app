@@ -90,21 +90,11 @@ pipeline {
                 always {
                     junit 'reports/test-results.xml'
                     archiveArtifacts artifacts: 'reports/coverage.xml,reports/htmlcov/**,reports/requirements-freeze.txt,reports/requirements-sorted.txt,reports/pip-audit.txt,reports/pip-review.txt,reports/flake8-html/**,reports/flake8-report.xml,reports/coverage-badge.svg,reports/last-commits.txt', allowEmptyArchive: true
-                    // Publication du rapport HTML de couverture et flake8 sur le dashboard Jenkins
-                    publishHTML (target: [
-                        reportDir: 'reports/htmlcov',
-                        reportFiles: 'index.html',
-                        reportName: 'Coverage Report',
-                        keepAll: true
-                    ])
-                    publishHTML (target: [
-                        reportDir: 'reports/flake8-html',
-                        reportFiles: 'index.html',
-                        reportName: 'Flake8 Lint Report',
-                        keepAll: true
-                    ])
-                    // Copier le badge de couverture dans le workspace pour versionning ou upload externe
-                    // copyArtifacts(projectName: env.JOB_NAME, filter: 'reports/coverage-badge.svg', target: 'coverage-badge/')
+                    // Pour publier les rapports HTML, assurez-vous d'installer le plugin "HTML Publisher" puis ajoutez ce bloc dans un script :
+                    // script {
+                    //     publishHTML(target: [reportDir: 'reports/htmlcov', reportFiles: 'index.html', reportName: 'Coverage Report', keepAll: true])
+                    //     publishHTML(target: [reportDir: 'reports/flake8-html', reportFiles: 'index.html', reportName: 'Flake8 Lint Report', keepAll: true])
+                    // }
                 }
             }
         }
