@@ -28,7 +28,8 @@ pipeline {
             steps {
                 bat """
                 \"${env.VENV_PYTHON}\" -m pip install -r requirements.txt
-                \"${env.VENV_PYTHON}\" -m pip install flake8 bandit
+                \"${env.VENV_PYTHON}\" -m pip show flake8 >nul 2>&1 || \"${env.VENV_PYTHON}\" -m pip install flake8
+                \"${env.VENV_PYTHON}\" -m pip show bandit >nul 2>&1 || \"${env.VENV_PYTHON}\" -m pip install bandit
                 echo Running flake8...
                 \"${env.VENV_PYTHON}\" -m flake8 . --format=xml --output-file=flake8-report.xml
                 if %ERRORLEVEL% NEQ 0 (
@@ -67,7 +68,7 @@ pipeline {
         stage('Dependency Security Audit') {
             steps {
                 bat """
-                \"${env.VENV_PYTHON}\" -m pip install pip-audit
+                \"${env.VENV_PYTHON}\" -m pip show pip-audit >nul 2>&1 || \"${env.VENV_PYTHON}\" -m pip install pip-audit
                 \"${env.VENV_PYTHON}\" -m pip_audit
                 """
             }
