@@ -30,10 +30,18 @@ pipeline {
                 bat """
                 \"${env.VENV_PYTHON}\" -m pip install -r requirements.txt
                 \"${env.VENV_PYTHON}\" -m pip install flake8 bandit
+                echo Running flake8...
                 \"${env.VENV_PYTHON}\" -m flake8 . --format=xml --output-file=flake8-report.xml
-                if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+                if %ERRORLEVEL% NEQ 0 (
+                    echo "❌ Erreurs de style détectées par flake8."
+                    exit /b %ERRORLEVEL%
+                )
+                echo Running bandit...
                 \"${env.VENV_PYTHON}\" -m bandit -r . -f xml -o bandit-report.xml
-                if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+                if %ERRORLEVEL% NEQ 0 (
+                    echo "❌ Problèmes de sécurité détectés par bandit."
+                    exit /b %ERRORLEVEL%
+                )
                 """
             }
             post {
