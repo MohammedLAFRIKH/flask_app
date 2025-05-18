@@ -18,7 +18,7 @@ pipeline {
             steps {
                 bat """
                 if not exist ${VENV_DIR} (
-                    \"${PYTHON_PATH}\" -m venv ${VENV_DIR}
+                    "${PYTHON_PATH}" -m venv ${VENV_DIR}
                 )
                 """
             }
@@ -28,11 +28,10 @@ pipeline {
             steps {
                 bat """
                 set "VENV_PYTHON=${env.WORKSPACE}\\${VENV_DIR}\\Scripts\\python.exe"
+                call "%VENV_PYTHON%" -m pip install --upgrade pip
                 if exist requirements.txt (
-                    call "%VENV_PYTHON%" -m pip install --upgrade pip
                     call "%VENV_PYTHON%" -m pip install -r requirements.txt
                 ) else (
-                    call "%VENV_PYTHON%" -m pip install --upgrade pip
                     call "%VENV_PYTHON%" -m pip install flask pytest
                 )
                 """
