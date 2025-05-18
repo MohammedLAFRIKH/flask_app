@@ -16,9 +16,8 @@ pipeline {
         stage('Setup Virtual Environment') {
             steps {
                 bat """
-                if not exist %VENV_DIR% (
-                    "%PYTHON_PATH%" -m venv %VENV_DIR%
-                )
+                if exist %VENV_DIR% rd /s /q %VENV_DIR%
+                "%PYTHON_PATH%" -m venv %VENV_DIR%
                 """
             }
         }
@@ -28,6 +27,8 @@ pipeline {
                 bat """
                 set "VENV_PYTHON=%WORKSPACE%\\%VENV_DIR%\\Scripts\\python.exe"
                 set "PATH=%WORKSPACE%\\%VENV_DIR%\\Scripts;%PATH%"
+                where python
+                echo %PATH%
                 rem Vérification du python du venv
                 "%VENV_PYTHON%" --version
                 "%VENV_PYTHON%" -m pip --version
