@@ -27,6 +27,7 @@ pipeline {
             steps {
                 bat """
                 set "VENV_PYTHON=%WORKSPACE%\\%VENV_DIR%\\Scripts\\python.exe"
+                set "PATH=%WORKSPACE%\\%VENV_DIR%\\Scripts;%PATH%"
                 call "%VENV_PYTHON%" -m pip install --upgrade pip
                 if exist requirements.txt (
                     call "%VENV_PYTHON%" -m pip install -r requirements.txt
