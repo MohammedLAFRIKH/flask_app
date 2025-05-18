@@ -48,11 +48,17 @@ pipeline {
                 if not exist reports mkdir reports
                 set "VENV_PYTHON=%WORKSPACE%\\%VENV_DIR%\\Scripts\\python.exe"
                 call "%VENV_PYTHON%" -m pytest --junitxml=reports/test-results.xml
+
+                rem === Idée : Générer un rapport de couverture de code ===
+                call "%VENV_PYTHON%" -m pip show coverage >nul 2>&1 || call "%VENV_PYTHON%" -m pip install coverage
+                call "%VENV_PYTHON%" -m coverage run -m pytest
+                call "%VENV_PYTHON%" -m coverage xml -o reports/coverage.xml
                 """
             }
             post {
                 always {
                     junit 'reports/test-results.xml'
+                    archiveArtifacts artifacts: 'reports/coverage.xml', allowEmptyArchive: true
                 }
             }
         }
