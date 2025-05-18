@@ -33,13 +33,13 @@ pipeline {
                 echo Running flake8...
                 \"${env.VENV_PYTHON}\" -m flake8 . --format=xml --output-file=flake8-report.xml
                 if %ERRORLEVEL% NEQ 0 (
-                    echo ❌ Erreurs de style détectées par flake8.
+                    echo Erreurs de style détectées par flake8.
                     exit /b %ERRORLEVEL%
                 )
                 echo Running bandit...
                 \"${env.VENV_PYTHON}\" -m bandit -r . -f xml -o bandit-report.xml
                 if %ERRORLEVEL% NEQ 0 (
-                    echo ❌ Problèmes de sécurité détectés par bandit.
+                    echo Problèmes de sécurité détectés par bandit.
                     exit /b %ERRORLEVEL%
                 )
                 """
