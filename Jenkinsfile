@@ -16,17 +16,25 @@ pipeline {
 
         stage('Setup Virtualenv') {
             steps {
-                bat "\"${env.PYTHON}\" -m venv ${env.VENV}"
+                bat """
+                if exist ${env.VENV} rmdir /s /q ${env.VENV}
+                \"${env.PYTHON}\" -m venv ${env.VENV}
+                \"${env.VENV_PYTHON}\" -m pip install --upgrade setuptools wheel
+                \"${env.VENV_PYTHON}\" -m pip install --upgrade pip
+                """
             }
         }
 
         stage('Install & Quality (Test)') {
             steps {
-                bat "\"${env.VENV_PYTHON}\" -m pip install --upgrade pip"
-                bat "\"${env.VENV_PYTHON}\" -m pip install -r requirements.txt"
-                bat "\"${env.VENV_PYTHON}\" -m pip install flake8 bandit"
-                bat "\"${env.VENV_PYTHON}\" -m flake8 . --format=xml --output-file=flake8-report.xml"
-                bat "\"${env.VENV_PYTHON}\" -m bandit -r . -f xml -o bandit-report.xml"
+                bat """
+                \"${env.VENV_PYTHON}\" -m pip install -r requirements.txt
+                \"${env.VENV_PYTHON}\" -m pip install flake8 bandit
+                \"${env.VENV_PYTHON}\" -m flake8 . --format=xml --output-file=flake8-report.xml
+                if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+                \"${env.VENV_PYTHON}\" -m bandit -r . -f xml -o bandit-report.xml
+                if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+                """
             }
             post {
                 always {
@@ -37,7 +45,10 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                bat "\"${env.VENV_PYTHON}\" -m pytest --junitxml=reports/test-results.xml"
+                bat """
+                if not exist reports mkdir reports
+                \"${env.VENV_PYTHON}\" -m pytest --junitxml=reports/test-results.xml
+                """
             }
             post {
                 always {
@@ -48,8 +59,10 @@ pipeline {
 
         stage('Dependency Security Audit') {
             steps {
-                bat "\"${env.VENV_PYTHON}\" -m pip install pip-audit"
-                bat "\"${env.VENV_PYTHON}\" -m pip_audit"
+                bat """
+                \"${env.VENV_PYTHON}\" -m pip install pip-audit
+                \"${env.VENV_PYTHON}\" -m pip_audit
+                """
             }
         }
 
