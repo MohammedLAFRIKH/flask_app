@@ -90,17 +90,38 @@ pipeline {
                 always {
                     junit 'reports/test-results.xml'
                     archiveArtifacts artifacts: 'reports/coverage.xml,reports/htmlcov/**,reports/requirements-freeze.txt,reports/requirements-sorted.txt,reports/pip-audit.txt,reports/pip-review.txt,reports/flake8-html/**,reports/flake8-report.xml,reports/coverage-badge.svg,reports/last-commits.txt', allowEmptyArchive: true
+                    // Publication du rapport HTML de couverture et flake8 sur le dashboard Jenkins
+                    publishHTML (target: [
+                        reportDir: 'reports/htmlcov',
+                        reportFiles: 'index.html',
+                        reportName: 'Coverage Report',
+                        keepAll: true
+                    ])
+                    publishHTML (target: [
+                        reportDir: 'reports/flake8-html',
+                        reportFiles: 'index.html',
+                        reportName: 'Flake8 Lint Report',
+                        keepAll: true
+                    ])
+                    // Copier le badge de couverture dans le workspace pour versionning ou upload externe
+                    copyArtifacts(projectName: env.JOB_NAME, filter: 'reports/coverage-badge.svg', target: 'coverage-badge/')
                 }
             }
         }
     }
 
     post {
-        failure {
-            echo '❌ Une erreur est survenue.'
-        }
         success {
             echo '✅ Pipeline terminé avec succès.'
+            // Tag Git automatique (nécessite credentials configurés dans Jenkins)
+            script {
+                def tagName = "build-${env.BUILD_NUMBER}"
+                sh "git tag ${tagName}"
+                sh "git push origin ${tagName}"
+            }
+        }
+        failure {
+            echo '❌ Une erreur est survenue.'
         }
     }
 }
