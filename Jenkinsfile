@@ -101,6 +101,7 @@ pipeline {
             echo '✅ Pipeline terminé avec succès.'
             // Suppression du tag Git automatique
         }
+        
         failure {
             echo '❌ Une erreur est survenue.'
         }
